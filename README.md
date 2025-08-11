@@ -1,6 +1,6 @@
 # RansomVault [Capstone Project]
 
-**RansomVault_Capstone** is a Java-based secure encrypted vault system that creates a hidden, password-protected volume inside the same physical disk. Designed to protect sensitive data from ransomware attacks and unauthorized access—even by administrators—this project ensures your files remain safe by mounting and locking the vault on demand.
+**RansomVault** is a Java-based secure encrypted vault system that creates a hidden, password-protected volume inside the same physical disk. Designed to protect sensitive data from ransomware attacks and unauthorized access—even by administrators—this project ensures your files remain safe by mounting and locking the vault on demand.
 
 ---
 
