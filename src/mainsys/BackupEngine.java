@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.security.MessageDigest;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class BackupEngine {
@@ -22,33 +21,32 @@ public class BackupEngine {
     public void backupFolder(Path sourceFolder, Path targetFolder) throws Exception {
         Files.walk(sourceFolder).forEach(source -> {
             try {
-                if (Files.isRegularFile(source)) {
-                    String fileName = source.getFileName().toString();
-                    
-                    // Skip macOS hidden/system files
-                    if (fileName.equals(".DS_Store") || fileName.startsWith("._") || fileName.startsWith(".")) return;
+                if (!Files.isRegularFile(source)) return;
 
-                    Path relative = sourceFolder.relativize(source);
-                    Path targetDir = targetFolder.resolve(relative).getParent();
+                String fileName = source.getFileName().toString();
+                
+                // Skip macOS hidden/system files
+                if (fileName.equals(".DS_Store") || fileName.startsWith("._") || fileName.startsWith(".")) return;
 
-                    String newHash = computeHash(source);
-                    String oldHash = hashMap.get(source.toString());
+                Path relative = sourceFolder.relativize(source);
+                Path targetDir = targetFolder.resolve(relative).getParent();
 
-                    if (oldHash == null || !newHash.equals(oldHash)) {
-                        Files.createDirectories(targetDir);
+                String newHash = computeHash(source);
+                String oldHash = hashMap.get(source.toString());
 
-                        // Versioned filename (_1, _2)
-                        Path versionedTarget = getVersionedFile(targetDir, fileName);
+                if (oldHash == null || !newHash.equals(oldHash)) {
+                    Files.createDirectories(targetDir);
 
-                        Files.copy(source, versionedTarget, StandardCopyOption.REPLACE_EXISTING);
-                        hashMap.put(source.toString(), newHash);
+                    // Versioned filename (_1, _2)
+                    Path versionedTarget = getVersionedFile(targetDir, fileName);
 
-                        System.out.println("[Backup] New version saved: " + versionedTarget);
+                    Files.copy(source, versionedTarget, StandardCopyOption.REPLACE_EXISTING);
+                    hashMap.put(source.toString(), newHash);
 
-                        // Clean old versions beyond MAX_VERSIONS
-                        cleanupOldVersions(targetDir, fileName);
-                    } 
-                    // Skip logging unchanged files
+                    System.out.println("[Backup] New version saved: " + versionedTarget.getFileName());
+
+                    // Clean old versions beyond MAX_VERSIONS
+                    cleanupOldVersions(targetDir, fileName);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -61,9 +59,11 @@ public class BackupEngine {
     private Path getVersionedFile(Path targetDir, String baseName) {
         File[] existing = targetDir.toFile().listFiles((dir, name) -> name.startsWith(baseName));
         int nextVersion = (existing == null) ? 1 : existing.length + 1;
+
         String nameWithoutExt = baseName.contains(".") ? baseName.substring(0, baseName.lastIndexOf('.')) : baseName;
         String ext = baseName.contains(".") ? baseName.substring(baseName.lastIndexOf('.')) : "";
         String newName = nameWithoutExt + (nextVersion > 1 ? "(" + nextVersion + ")" : "") + ext;
+
         return targetDir.resolve(newName);
     }
 
